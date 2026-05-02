@@ -109,6 +109,39 @@ export async function getCronJobs() {
   return safeReadJson(JOBS_PATH, { jobs: [] });
 }
 
+export async function getMaxAgentHealth(): Promise<{
+  status: "up" | "down" | "unknown";
+  last_check: string;
+  response_time_ms: number;
+  http_code: number | null;
+  error: string | null;
+}> {
+  const url = "https://emmanuels-mac-mini.tail1a5e76.ts.net:8443";
+  const start = Date.now();
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    return {
+      status: res.ok || res.status === 307 ? "up" : "down",
+      last_check: new Date().toISOString(),
+      response_time_ms: Date.now() - start,
+      http_code: res.status,
+      error: null,
+    };
+  } catch (e) {
+    return {
+      status: "down",
+      last_check: new Date().toISOString(),
+      response_time_ms: Date.now() - start,
+      http_code: null,
+      error: e instanceof Error ? e.message : "Connection failed",
+    };
+  }
+}
+
 export async function getSessions(): Promise<Array<{ name: string; modified: string; size: number }>> {
   try {
     if (!fs.existsSync(SESSIONS_DIR)) return [];

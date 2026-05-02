@@ -1,4 +1,4 @@
-import { getMemory, getChannelDirectory, getCronJobs } from "@/lib/data";
+import { getMemory, getChannelDirectory, getCronJobs, getMaxAgentHealth } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -7,6 +7,7 @@ export default async function TeamPage() {
   const memory = await getMemory();
   const channelDir = await getChannelDirectory();
   const cronJobs = await getCronJobs();
+  const maxAgent = await getMaxAgentHealth();
 
   return (
     <div className="space-y-6">
@@ -15,6 +16,36 @@ export default async function TeamPage() {
         <p className="text-[#888888] text-sm mt-1">
           Agent identity and platform connections
         </p>
+      </div>
+
+      {/* MAX Agent Health Banner */}
+      <div className={`rounded-lg border p-4 flex items-center justify-between ${
+        maxAgent.status === "up"
+          ? "bg-[#00ff88]/5 border-[#00ff88]/30"
+          : maxAgent.status === "down"
+          ? "bg-red-500/10 border-red-500/30"
+          : "bg-yellow-500/5 border-yellow-500/20"
+      }`}>
+        <div className="flex items-center gap-3">
+          <span className={`text-2xl ${
+            maxAgent.status === "up" ? "text-[#00ff88]" : maxAgent.status === "down" ? "text-red-400" : "text-yellow-400"
+          }`}>
+            {maxAgent.status === "up" ? "◉" : maxAgent.status === "down" ? "◌" : "◐"}
+          </span>
+          <div>
+            <div className="text-sm font-semibold text-[#e0e0e0]">MAX Agent — Emmanuel's Mac Mini</div>
+            <div className="text-xs text-[#666666]">
+              {maxAgent.status === "up"
+                ? `UP — ${maxAgent.response_time_ms}ms · https://emmanuels-mac-mini.tail1a5e76.ts.net:8443`
+                : maxAgent.status === "down"
+                ? `DOWN — ${maxAgent.error || "Connection failed"}`
+                : "UNKNOWN — check pending"}
+            </div>
+          </div>
+        </div>
+        <div className="text-xs text-[#666666]">
+          {maxAgent.last_check ? new Date(maxAgent.last_check).toLocaleTimeString() : "Never"}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
